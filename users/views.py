@@ -1,30 +1,52 @@
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterSerializer, UserSerializer, TokenSerializer
+from users.serializers import MyTokenObtainPairSerializer, UserSerializer
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.permissions import AllowAny
+from rest_framework import status, viewsets
+from rest_framework.generics import CreateAPIView
+# from users.serializers import RegisterSerializer
+
+User = get_user_model()
 
 
-class RegisterView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
 
 
-class TokenObtainView(APIView):
-    permission_classes = [permissions.AllowAny]
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
-    def post(self, request):
-        serializer = TokenSerializer(data=request.data)
-        if serializer.is_valid():
-            refresh = RefreshToken.for_user(request.user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            })
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserCreateAPIView(CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+
+    def perform_create(self, serializer):
+        user = serializer.save(is_active=True)
+        user.set_password(user.password)
+        user.save()
+#
+#
+# class RegisterView(APIView):
+#     permission_classes = [permissions.AllowAny]
+#
+#     def post(self, request):
+#         serializer = RegisterSerializer(data=request.data)
+#         if serializer.is_valid():
+#             user = serializer.save()
+#             return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]  # Можно настроить нужный уровень доступа
+
+    def get(self, request):
+        users = User.objects.all()  # Получаем всех пользователей
+        serializer = UserSerializer(users, many=True)  # Сериализуем данные
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -29,6 +29,7 @@ class UsefulHabitViewSet(viewsets.ModelViewSet):
         # Здесь связываем полезную привычку с текущим пользователем
         serializer.save(user=self.request.user)
 
+
 # Вьюха для получения токенов
 class TokenObtainView(APIView):
     permission_classes = [permissions.AllowAny]

@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
 
@@ -8,13 +8,14 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'email', 'password', 'first_name', 'last_name']
+        extra_kwargs = {'password': {'write_only': True}}
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ['email', 'password']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -22,7 +23,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-class TokenSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
-    access = serializers.CharField()
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Добавление пользовательских полей в токен
+        # token['username'] = user.username
+        token["email"] = user.email
+
+        return token
 
