@@ -1,13 +1,12 @@
-from rest_framework import status, permissions
+from rest_framework import status, permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from users.serializers import MyTokenObtainPairSerializer, UserSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import AllowAny
-from rest_framework import status, viewsets
 from rest_framework.generics import CreateAPIView
-# from users.serializers import RegisterSerializer
+
 
 User = get_user_model()
 
@@ -30,6 +29,8 @@ class UserCreateAPIView(CreateAPIView):
         user = serializer.save(is_active=True)
         user.set_password(user.password)
         user.save()
+
+
 #
 #
 # class RegisterView(APIView):
@@ -44,7 +45,9 @@ class UserCreateAPIView(CreateAPIView):
 
 
 class UserListView(APIView):
-    permission_classes = [permissions.IsAuthenticated]  # Можно настроить нужный уровень доступа
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]  # Можно настроить нужный уровень доступа
 
     def get(self, request):
         users = User.objects.all()  # Получаем всех пользователей

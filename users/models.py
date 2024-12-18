@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
-from habits.models import UsefulHabit, PleasantHabit,  Reward
 
 
 class CustomUserManager(BaseUserManager):
@@ -28,13 +27,9 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractUser):
     username = None
-    email = models.EmailField(
-        unique=True
-    )
+    email = models.EmailField(unique=True)
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = (
-        []
-    )
+    REQUIRED_FIELDS = []
     objects = CustomUserManager()
 
     def __str__(self):

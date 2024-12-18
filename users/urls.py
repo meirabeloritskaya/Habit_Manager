@@ -1,11 +1,9 @@
 from django.urls import include, path
 from rest_framework.permissions import AllowAny
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import \
-    TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 from users.apps import UsersConfig
-from .views import (MyTokenObtainPairView,
-                    UserCreateAPIView, UserViewSet)
+from .views import MyTokenObtainPairView, UserCreateAPIView, UserViewSet
 from .views import UserListView
 
 
@@ -27,6 +25,5 @@ urlpatterns = [
         name="login",
     ),
     path("register/", UserCreateAPIView.as_view(), name="register"),
-    path('users/', UserListView.as_view(), name='user-list'),
+    path("users/", UserListView.as_view(), name="user-list"),
 ]
-

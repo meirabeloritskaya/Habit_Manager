@@ -7,51 +7,51 @@ class UsefulHabit(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         verbose_name="Пользователь",
-        help_text="Пользователь, который создает привычку"
+        help_text="Пользователь, который создает привычку",
     )
     action = models.CharField(
         max_length=255,
         verbose_name="Действие",
-        help_text="Описание действия, которое будет выполнено в рамках привычки"
+        help_text="Описание действия, которое будет выполнено в рамках привычки",
     )
     time = models.TimeField(
         verbose_name="Время выполнения",
-        help_text="Время, когда необходимо выполнять привычку"
+        help_text="Время, когда необходимо выполнять привычку",
     )
     place = models.CharField(
         max_length=255,
         verbose_name="Место выполнения",
-        help_text="Место, где будет выполняться привычка"
+        help_text="Место, где будет выполняться привычка",
     )
     reward = models.ForeignKey(
-        'Reward',
+        "Reward",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         verbose_name="Вознаграждение",
-        help_text="Вознаграждение, которое пользователь получит за выполнение привычки"
+        help_text="Вознаграждение, которое пользователь получит за выполнение привычки",
     )
     related_habit = models.ForeignKey(
-        'PleasantHabit',
+        "PleasantHabit",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         verbose_name="Связанная привычка",
-        help_text="Приятная привычка, которая будет связана с этой полезной привычкой"
+        help_text="Приятная привычка, которая будет связана с этой полезной привычкой",
     )
     periodicity = models.PositiveIntegerField(
         default=1,
         verbose_name="Периодичность (в днях)",
-        help_text="Периодичность повторения привычки (по умолчанию 1 день)"
+        help_text="Периодичность повторения привычки (по умолчанию 1 день)",
     )
     duration = models.PositiveIntegerField(
         verbose_name="Время выполнения (в секундах)",
-        help_text="Ожидаемое время на выполнение привычки в секундах"
+        help_text="Ожидаемое время на выполнение привычки в секундах",
     )
     is_public = models.BooleanField(
         default=False,
         verbose_name="Публичность",
-        help_text="Может ли привычка быть опубликована для других пользователей?"
+        help_text="Может ли привычка быть опубликована для других пользователей?",
     )
 
     def __str__(self):
@@ -67,25 +67,25 @@ class PleasantHabit(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         verbose_name="Пользователь",
-        help_text="Пользователь, который создает приятную привычку"
+        help_text="Пользователь, который создает приятную привычку",
     )
     action = models.CharField(
         max_length=255,
         verbose_name="Действие",
-        help_text="Описание действия приятной привычки"
+        help_text="Описание действия приятной привычки",
     )
     is_reward = models.BooleanField(
         default=True,
         verbose_name="Признак вознаграждения",
-        help_text="Является ли эта привычка способом вознаградить себя за выполнение полезной привычки"
+        help_text="Является ли эта привычка способом вознаградить себя за выполнение полезной привычки",
     )
     related_useful_habit = models.ForeignKey(
-        'UsefulHabit',
+        "UsefulHabit",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         verbose_name="Связанная полезная привычка",
-        help_text="Полезная привычка, с которой связана эта приятная привычка"
+        help_text="Полезная привычка, с которой связана эта приятная привычка",
     )
 
     def __str__(self):
@@ -101,12 +101,12 @@ class Reward(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         verbose_name="Пользователь",
-        help_text="Пользователь, который получит вознаграждение"
+        help_text="Пользователь, который получит вознаграждение",
     )
     description = models.CharField(
         max_length=255,
         verbose_name="Описание вознаграждения",
-        help_text="Описание вознаграждения, которое пользователь получит"
+        help_text="Описание вознаграждения, которое пользователь получит",
     )
     cost = models.DecimalField(
         max_digits=10,
@@ -114,7 +114,7 @@ class Reward(models.Model):
         null=True,
         blank=True,
         verbose_name="Стоимость вознаграждения",
-        help_text="Стоимость вознаграждения (если применимо)"
+        help_text="Стоимость вознаграждения (если применимо)",
     )
 
     def __str__(self):
