@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from habits.models import UsefulHabit, PleasantHabit, Reward
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 # Сериализатор для регистрации пользователя
@@ -24,10 +25,32 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-class HabitSerializer(serializers.ModelSerializer):
+class UsefulSerializer(serializers.ModelSerializer):
+    is_owner = serializers.SerializerMethodField()
+
     class Meta:
         model = UsefulHabit
-        fields = "__all__"  # Сериализует все поля модели UsefulHabit
+        fields = "__all__"
+
+    def get_is_owner(self, obj):
+        request = self.context.get("request")
+        return request.user == obj.user if request else False
+
+    def validate(self, attrs):
+        # Проверяем, что reward и related_habit принадлежат тому же пользователю
+        reward = attrs.get("reward")
+        related_habit = attrs.get("related_habit")
+        user = self.context["request"].user
+
+        if reward and reward.user != user:
+            raise serializers.ValidationError(
+                "Вознаграждение должно принадлежать текущему пользователю."
+            )
+        if related_habit and related_habit.user != user:
+            raise serializers.ValidationError(
+                "Связанная привычка должна принадлежать текущему пользователю."
+            )
+        return attrs
 
 
 class PleasantHabitSerializer(serializers.ModelSerializer):
@@ -47,14 +70,3 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ["id", "email", "first_name", "last_name", "is_active", "is_staff"]
-
-
-# Сериализатор для работы с токенами (JWT)
-class TokenSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
-    access = serializers.CharField()
-
-    def validate(self, attrs):
-        refresh = attrs.get("refresh")
-        access = attrs.get("access")
-        return {"refresh": refresh, "access": access}
