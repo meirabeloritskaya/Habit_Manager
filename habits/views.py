@@ -46,7 +46,7 @@ class UsefulHabitViewSet(viewsets.ModelViewSet):
             else:
                 return UsefulHabit.objects.filter(is_public=True)
         elif self.action == "retrieve":
-            # Если это запрос на получение данных о привычке, проверим, является ли она принадлежащей пользователю
+            # Если это запрос на получение данных о привычке, проверим, принадлежит ли она пользователю
             habit = UsefulHabit.objects.filter(id=self.kwargs["pk"]).first()
             if habit and habit.user != user:
                 raise PermissionDenied("У вас нет прав на просмотр этой привычки.")

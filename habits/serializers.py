@@ -1,3 +1,4 @@
+import attrs
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -37,10 +38,15 @@ class UsefulSerializer(serializers.ModelSerializer):
         return request.user == obj.user if request else False
 
     def validate(self, attrs):
-        # Проверяем, что reward и related_habit принадлежат тому же пользователю
         reward = attrs.get("reward")
         related_habit = attrs.get("related_habit")
+
         user = self.context["request"].user
+
+        if reward and related_habit:
+            raise serializers.ValidationError(
+                "Нельзя указать одновременно вознаграждение и связанную привычку."
+            )
 
         if reward and reward.user != user:
             raise serializers.ValidationError(
@@ -50,6 +56,20 @@ class UsefulSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Связанная привычка должна принадлежать текущему пользователю."
             )
+
+        duration = attrs.get("duration")
+        periodicity = attrs.get("periodicity")
+
+        if duration and (duration < 1 or duration > 120):
+            raise serializers.ValidationError(
+                "Время выполнения (duration) должно быть в пределах 120 секунд"
+            )
+
+        if periodicity and (periodicity < 1 or periodicity > 7):  # Периодичность от 1 дня до 1 года
+            raise serializers.ValidationError(
+                "Периодичность (periodicity) должна быть в пределах от 1 до 7 дней."
+            )
+
         return attrs
 
 
