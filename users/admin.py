@@ -50,7 +50,10 @@ class UserAdmin(admin.ModelAdmin):
 
     # Поля для редактирования в форме пользователя
     fieldsets = (
-        (None, {"fields": ("email", "first_name", "last_name", "password")}),
+        (
+            None,
+            {"fields": ("email", "tg_chat_id", "first_name", "last_name", "password")},
+        ),
         (
             "Permissions",
             {

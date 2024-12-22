@@ -1,12 +1,9 @@
-import attrs
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from habits.models import UsefulHabit, PleasantHabit, Reward
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
-# Сериализатор для регистрации пользователя
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, required=True, validators=[validate_password]
@@ -65,7 +62,9 @@ class UsefulSerializer(serializers.ModelSerializer):
                 "Время выполнения (duration) должно быть в пределах 120 секунд"
             )
 
-        if periodicity and (periodicity < 1 or periodicity > 7):  # Периодичность от 1 дня до 1 года
+        if periodicity and (
+            periodicity < 1 or periodicity > 7
+        ):  # Периодичность от 1 дня до 1 года
             raise serializers.ValidationError(
                 "Периодичность (periodicity) должна быть в пределах от 1 до 7 дней."
             )
@@ -85,7 +84,6 @@ class RewardSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-# Сериализатор для пользователя
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()

@@ -12,10 +12,11 @@ from habits.serializers import (
 from rest_framework.views import APIView
 from habits.permissions import (
     IsOwnerOrReadOnly,
-)  # Используем кастомный пермишн для проверки владельца
+)
+from habits.services import send_telegram_message
+from users.models import User
 
 
-# Вьюха для регистрации пользователя
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -93,3 +94,42 @@ class RewardViewSet(viewsets.ModelViewSet):
         Устанавливаем текущего пользователя как владельца создаваемой награды.
         """
         serializer.save(user=self.request.user)
+
+
+class SendReminderView(APIView):
+    """
+    Класс для отправки напоминания пользователю через Telegram.
+    Ожидается, что в запросе будет передан email пользователя, которому нужно отправить напоминание.
+    """
+
+    def post(self, request):
+        print("Запрос получен!")
+        email = request.data.get("email")
+        if not email:
+            print("Email не передан!")
+            return Response(
+                {"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            print(f"Looking for user with email: {email}")
+            user = User.objects.get(email=email)
+            print(f"User found: {user.email}")
+
+            if user.tg_chat_id:
+                message = "Пришло время для выполнения вашей полезной привычки!"
+                print(f"Sending message to chat_id: {user.tg_chat_id}")
+                send_telegram_message(user.tg_chat_id, message)
+                print(f"Сообщение отправлено пользователю {email}")
+                return Response({"message": "Напоминание отправлено!"})
+            else:
+                print(f"У пользователя {email} нет chat_id")
+                return Response(
+                    {"error": "User does not have a Telegram chat ID"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except User.DoesNotExist:
+            print(f"Пользователь с email {email} не найден")
+            return Response(
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+            )
