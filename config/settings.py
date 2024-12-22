@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 from datetime import timedelta
+from celery.schedules import crontab
 
 load_dotenv()
 
@@ -31,6 +32,7 @@ INSTALLED_APPS = [
     "django_filters",
     "users",
     "django_extensions",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -41,8 +43,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # 'corsheaders.middleware.CorsMiddleware',
-    # 'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -105,7 +105,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Jerusalem"
 
 USE_I18N = True
 
@@ -173,5 +173,13 @@ LOGGING = {
             "level": "DEBUG",
             "propagate": True,
         },
+    },
+}
+
+
+CELERY_BEAT_SCHEDULE = {
+    "send_habit_reminders": {
+        "task": "habits.tasks.schedule_habit_reminders",
+        "schedule": timedelta(days=1),
     },
 }
