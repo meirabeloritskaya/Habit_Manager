@@ -18,6 +18,7 @@ celery = "^5.4.0"
 billiard = "4.2.1"
 django-celery-beat = "^2.7.0"
 pytz = "^2024.2"
+drf-yasg = "^1.21.8"
 
 
 [build-system]
