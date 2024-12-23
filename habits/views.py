@@ -43,7 +43,7 @@ class UsefulHabitViewSet(viewsets.ModelViewSet):
                 # Публичные привычки + личные привычки пользователя
                 return UsefulHabit.objects.filter(
                     is_public=True
-                ) | UsefulHabit.objects.filter(user=user)
+                ) | UsefulHabit.objects.filter(user=user).order_by("id")
             else:
                 return UsefulHabit.objects.filter(is_public=True)
         elif self.action == "retrieve":
