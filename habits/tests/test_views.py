@@ -28,7 +28,7 @@ class HabitViewSetTest(TestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertIn(
-            "Test habit", [habit["action"] for habit in response.data["results"]]
+            habit.action, [habit["action"] for habit in response.data["results"]]
         )
 
     def test_create_habit(self):
