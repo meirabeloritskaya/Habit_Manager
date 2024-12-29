@@ -1,8 +1,9 @@
 from django.db import models
 from django.conf import settings
+from rest_framework.exceptions import ValidationError
 
 
-class UsefulHabit(models.Model):
+class Habit(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -12,7 +13,7 @@ class UsefulHabit(models.Model):
     action = models.CharField(
         max_length=255,
         verbose_name="Действие",
-        help_text="Описание действия, которое будет выполнено в рамках привычки",
+        help_text="Описание действия привычки",
     )
     time = models.TimeField(
         verbose_name="Время выполнения",
@@ -32,12 +33,12 @@ class UsefulHabit(models.Model):
         help_text="Вознаграждение, которое пользователь получит за выполнение привычки",
     )
     related_habit = models.ForeignKey(
-        "PleasantHabit",
+        "self",  # Ссылаемся на саму модель
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         verbose_name="Связанная привычка",
-        help_text="Приятная привычка, которая будет связана с этой полезной привычкой",
+        help_text="Привычка, которая будет связана с этой",
     )
     periodicity = models.PositiveIntegerField(
         default=1,
@@ -53,47 +54,38 @@ class UsefulHabit(models.Model):
         verbose_name="Публичность",
         help_text="Может ли привычка быть опубликована для других пользователей?",
     )
-
-    def __str__(self):
-        return self.action
-
-    class Meta:
-        verbose_name = "Полезная привычка"
-        verbose_name_plural = "Полезные привычки"
-
-
-class PleasantHabit(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        verbose_name="Пользователь",
-        help_text="Пользователь, который создает приятную привычку",
-    )
-    action = models.CharField(
-        max_length=255,
-        verbose_name="Действие",
-        help_text="Описание действия приятной привычки",
-    )
-    is_reward = models.BooleanField(
-        default=True,
-        verbose_name="Признак вознаграждения",
-        help_text="Является ли эта привычка способом вознаградить себя за выполнение полезной привычки",
-    )
-    related_useful_habit = models.ForeignKey(
-        "UsefulHabit",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        verbose_name="Связанная полезная привычка",
-        help_text="Полезная привычка, с которой связана эта приятная привычка",
+    is_pleasant_habit = models.BooleanField(
+        default=False,
+        verbose_name="Признак приятной привычки",
+        help_text="Является ли привычка приятной",
     )
 
     def __str__(self):
         return self.action
 
     class Meta:
-        verbose_name = "Приятная привычка"
-        verbose_name_plural = "Приятные привычки"
+        verbose_name = "Привычка"
+        verbose_name_plural = "Привычки"
+
+    def clean(self):
+        if self.is_pleasant_habit:
+            # Приятная привычка не может иметь вознаграждение или связанную привычку
+            if self.reward or self.related_habit:
+                raise ValidationError(
+                    "Приятная привычка не может иметь вознаграждение или связанную привычку."
+                )
+        else:  # Если привычка неприятная
+            # Неприятная привычка не может иметь одновременно вознаграждение и связанную привычку
+            if self.reward and self.related_habit:
+                raise ValidationError(
+                    "Неприятная привычка не может иметь одновременно вознаграждение и связанную привычку."
+                )
+
+            # Неприятная привычка может быть связана только с приятной
+            if self.related_habit and not self.related_habit.is_pleasant_habit:
+                raise ValidationError(
+                    "Неприятная привычка может быть связана только с приятной."
+                )
 
 
 class Reward(models.Model):

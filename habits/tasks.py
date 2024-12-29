@@ -1,8 +1,8 @@
+from habits.models import Habit
 from habits.services import send_telegram_message
 from django.utils import timezone
 from celery import shared_task
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
-from habits.models import UsefulHabit
 import json
 
 
@@ -12,7 +12,8 @@ def send_habit_reminders():
     now = timezone.localtime(timezone.now())
     current_time = now.time()
 
-    habits = UsefulHabit.objects.filter(time=current_time)
+    # Получаем все привычки, которые должны быть выполнены в это время
+    habits = Habit.objects.filter(time=current_time)
     for habit in habits:
         chat_id = habit.user.tg_chat_id
         if chat_id:
@@ -26,7 +27,7 @@ def send_habit_reminders():
 @shared_task
 def schedule_habit_reminders():
     """Настраивает периодические задачи для привычек в Celery Beat."""
-    habits = UsefulHabit.objects.all()
+    habits = Habit.objects.all()
     for habit in habits:
         # Создаем или обновляем расписание на основе periodicity
         schedule, created = IntervalSchedule.objects.get_or_create(
@@ -50,7 +51,7 @@ def schedule_habit_reminders():
 def send_single_habit_reminder(habit_id):
     """Отправляет напоминание для одной привычки."""
     try:
-        habit = UsefulHabit.objects.get(id=habit_id)
+        habit = Habit.objects.get(id=habit_id)
         chat_id = habit.user.tg_chat_id
         if chat_id:
             message = f"Пора выполнить привычку: {habit.action}"
@@ -58,5 +59,5 @@ def send_single_habit_reminder(habit_id):
             print(
                 f"Напоминание отправлено пользователю {habit.user.email} для привычки '{habit.action}'"
             )
-    except UsefulHabit.DoesNotExist:
+    except Habit.DoesNotExist:
         print(f"Привычка с ID {habit_id} не найдена.")

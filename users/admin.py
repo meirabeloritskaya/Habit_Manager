@@ -1,29 +1,22 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from habits.models import UsefulHabit, PleasantHabit, Reward
+from habits.models import Habit, Reward
 
 User = get_user_model()
 
 
-class UsefulHabitInline(admin.TabularInline):
-    model = UsefulHabit
+class HabitInline(admin.TabularInline):
+    model = Habit
     fields = (
         "action",
         "time",
         "place",
         "reward",
+        "is_pleasant_habit",  # Новый флаг для отличия полезной и приятной привычки
         "periodicity",
         "duration",
         "is_public",
     )
-    extra = 0
-    can_delete = True
-    show_change_link = True
-
-
-class PleasantHabitInline(admin.TabularInline):
-    model = PleasantHabit
-    fields = ("action", "is_reward", "related_useful_habit")
     extra = 0
     can_delete = True
     show_change_link = True
@@ -46,7 +39,7 @@ class UserAdmin(admin.ModelAdmin):
     ordering = ["email"]
 
     # Добавляем инлайны для отображения связанных моделей
-    inlines = [UsefulHabitInline, PleasantHabitInline, RewardInline]
+    inlines = [HabitInline, RewardInline]
 
     # Поля для редактирования в форме пользователя
     fieldsets = (
