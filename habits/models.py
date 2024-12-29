@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 
 
 class Habit(models.Model):

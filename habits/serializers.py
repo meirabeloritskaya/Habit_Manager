@@ -25,10 +25,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class HabitSerializer(serializers.ModelSerializer):
     is_owner = serializers.SerializerMethodField()
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Habit
         fields = "__all__"
+        read_only_fields = ["user"]
 
     def get_is_owner(self, obj):
         request = self.context.get("request")
