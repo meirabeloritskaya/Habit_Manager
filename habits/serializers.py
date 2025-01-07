@@ -48,10 +48,11 @@ class HabitSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     "Нельзя указать одновременно вознаграждение и связанную привычку для неприятной привычки."
                 )
-            if related_habit and related_habit.is_pleasant_habit:
-                raise serializers.ValidationError(
-                    "Неприятная привычка не может быть связана с приятной привычкой."
-                )
+            if not is_pleasant_habit:  # Если привычка неприятная
+                if related_habit and not related_habit.is_pleasant_habit:
+                    raise serializers.ValidationError(
+                        "Неприятная привычка может быть связана только с приятной привычкой."
+                    )
 
         # Для приятной привычки нельзя указать вознаграждение или связанную привычку
         if is_pleasant_habit:
