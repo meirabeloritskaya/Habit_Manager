@@ -29,15 +29,10 @@ jobs:
           echo "EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}" >> .env
           echo "TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}" >> .env
           echo "TELEGRAM_URL=${{ secrets.TELEGRAM_URL }}" >> .env
-      - name: Verify .env file exists
+      - name: Verify .env file
         run: |
-          if [ ! -f .env ]; then
-            echo ".env file not found"
-            exit 1
-          else
-            echo ".env file successfully created in $(pwd)"
-            cat .env  # Optional: To debug, print the content of .env (remove for production)
-          fi
+            echo "### Verifying .env file ###"
+            cat .env
   test:
     name: Run Tests
     runs-on: ubuntu-latest
