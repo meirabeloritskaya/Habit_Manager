@@ -1,4 +1,5 @@
 import os
+import dj_database_url
 from dotenv import load_dotenv
 from pathlib import Path
 from datetime import timedelta
@@ -13,9 +14,9 @@ STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 
-DEBUG = True if os.getenv("DEBUG") == "True" else False
+DEBUG =  False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["https://habit-manager-dm69.onrender.com"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_celery_beat",
     "drf_yasg",
+    "celery",
 ]
 
 MIDDLEWARE = [
@@ -76,17 +78,22 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 5,
 }
 
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.getenv("DATABASE_NAME"),
-        "USER": os.getenv("DATABASE_USER"),
-        "PASSWORD": os.getenv("DATABASE_PASSWORD"),
-        "HOST": os.getenv("DATABASE_HOST"),
-        "PORT": os.getenv("DATABASE_PORT"),
+if os.getenv("DJANGO_ENV") == "production":  # Продакшн-режим (Render)
+    DATABASES = {"default": dj_database_url.config(default=os.getenv("DATABASE_URL"))}
+else:  # Локальный режим (Docker)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.getenv("DATABASE_NAME"),
+            "USER": os.getenv("DATABASE_USER"),
+            "PASSWORD": os.getenv("DATABASE_PASSWORD"),
+            "HOST": os.getenv("DATABASE_HOST"),
+            "PORT": os.getenv("DATABASE_PORT"),
+            "TEST": {
+                "NAME": os.getenv("POSTGRES_TEST_DB", "test_db"),  # Имя тестовой базы данных
+            },
+        }
     }
-}
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -153,6 +160,8 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_BACKEND = "redis://redis:6379"
+CELERY_TASK_TRACK_STARTED = True
 
 LOGGING = {
     "version": 1,
@@ -187,4 +196,4 @@ CELERY_BEAT_SCHEDULE = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
-
+CSRF_TRUSTED_ORIGINS = ["https://habit-manager-dm69.onrender.com"]

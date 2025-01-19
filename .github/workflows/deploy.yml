@@ -1,38 +1,17 @@
-name: CI/CD Pipeline
+name: Django CI/CD
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: [push, pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: Habit_Manager
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: Meira4232953
-        ports:
-          - 5432:5432
-
-      redis:
-        image: redis:latest
-        ports:
-          - 6379:6379
-
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v3
         with:
           python-version: '3.12'
 
@@ -41,15 +20,20 @@ jobs:
           pip install poetry
           poetry install
 
-      - name: Run migrations
-        run: |
-          sleep 10  # ожидание запуска PostgreSQL
-          echo "SELECT 1;" | PGPASSWORD=$POSTGRES_PASSWORD psql -U $POSTGRES_USER -h postgres $POSTGRES_DB
-          poetry run python manage.py migrate
+      - name: Set DJANGO_ENV for Testing
+        run: echo "DJANGO_ENV=development" >> $GITHUB_ENV
 
-      - name: Run tests
+      - name: Set up PostgreSQL
         run: |
-          poetry run python manage.py test
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          sudo service postgresql start
+          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'Meira4232953';"
+          sudo -u postgres psql -c "CREATE DATABASE Habit_Manager;"
+          sudo -u postgres psql -c "CREATE ROLE runner WITH LOGIN PASSWORD 'Meira4232953';"
+          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE Habit_Manager TO runner;"
+          sudo -u postgres psql -c "GRANT CREATE ON SCHEMA public TO runner;"
+          echo "DATABASE_URL=postgres://runner:Meira4232953@localhost/Habit_Manager" >> $GITHUB_ENV
 
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -59,44 +43,36 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Install Docker Compose
+      - name: Prune Docker cache
         run: |
-          sudo apt-get update
-          sudo apt-get install docker-compose-plugin
+          docker builder prune -af
+          docker image prune -af
 
-      - name: Set up PostgreSQL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-          sudo service postgresql start
-          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'Meira4232953';"
-          sudo -u postgres psql -c "CREATE DATABASE Habit_Manager;"
-          sudo -u postgres psql -c "CREATE USER postgres WITH PASSWORD 'Meira4232953';"
-          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE Habit_Manager TO postgres;"
+      - name: Set DJANGO_ENV for Production
+        run: echo "DJANGO_ENV=production" >> $GITHUB_ENV
 
       - name: Log in to Docker Hub
-        run: echo $DOCKER_HUB_ACCESS_TOKEN | docker login --username $DOCKER_HUB_USERNAME --password-stdin
+        shell: bash
+        run: |
+          echo "### Logging into Docker Hub ###"
+          echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login --username "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+          echo "### Logged into Docker Hub successfully ###"
 
       - name: Build Docker Image
         run: |
+          echo "### Starting Docker Compose build ###"
           docker compose build
+          echo "### Docker Compose build completed ###"
 
       - name: Push Docker Image
         run: |
+          echo "### Starting Docker Compose push ###"
           docker compose push
-
-      - name: Deploy to Server
-        uses: appleboy/scp-action@master
-        with:
-          host: $SERVER_HOST
-          username: $SERVER_USER
-          key: $SSH_PRIVATE_KEY
-          script: |
-            cd /path/to/your/project
-            docker compose down
-            docker compose pull
-            docker compose up -d
+          echo "### Docker Compose push completed ###"
 
       - name: Deploy to Render
         run: |
+          echo "### Deploying to Render ###"
           curl -X POST $RENDER_DEPLOY_HOOK
+          echo "### Deployment to Render triggered ###"
+        env:

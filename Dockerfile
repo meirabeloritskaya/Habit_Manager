@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && apt-get install -y libpq-dev build-essential
+
 # Устанавливаем Poetrydocker-compose exec app bashpoetry show
 RUN pip install poetry
 
@@ -16,7 +18,7 @@ WORKDIR /code
 COPY pyproject.toml poetry.lock* /code/
 
 # Устанавливаем зависимости через Poetry
-RUN poetry install --no-dev || cat /code/poetry.log
+RUN poetry install --only main --no-root
 
 
 # Копируем остальные файлы проекта
