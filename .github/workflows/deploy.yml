@@ -35,7 +35,8 @@ jobs:
             echo ".env file not found"
             exit 1
           else
-            echo ".env file exists"
+            echo ".env file successfully created in $(pwd)"
+            cat .env  # Optional: To debug, print the content of .env (remove for production)
           fi
   test:
     name: Run Tests
