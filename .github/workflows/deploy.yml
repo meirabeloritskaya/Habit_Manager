@@ -29,7 +29,14 @@ jobs:
           echo "EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}" >> .env
           echo "TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}" >> .env
           echo "TELEGRAM_URL=${{ secrets.TELEGRAM_URL }}" >> .env
-
+      - name: Verify .env file exists
+        run: |
+          if [ ! -f .env ]; then
+            echo ".env file not found"
+            exit 1
+          else
+            echo ".env file exists"
+          fi
   test:
     name: Run Tests
     runs-on: ubuntu-latest
