@@ -3,12 +3,47 @@ name: Django CI/CD
 on: [push, pull_request]
 
 jobs:
-  test:
+  setup:
+    name: Setup Environment
     runs-on: ubuntu-latest
+    outputs:
+      env-path: ${{ steps.set-env.outputs.env-path }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Generate .env file
+        id: set-env
+        run: |
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "DJANGO_ENV=production" >> .env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "POSTGRES_USER=postgres" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
+          echo "POSTGRES_HOST=db" >> .env
+          echo "DEBUG=False" >> .env
+          echo "RENDER_DEPLOY_HOOK=${{ secrets.RENDER_DEPLOY_HOOK }}" >> .env
+          echo "STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }}" >> .env
+          echo "STRIPE_API_KEY=${{ secrets.STRIPE_API_KEY }}" >> .env
+          echo "EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}" >> .env
+          echo "EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}" >> .env
+          echo "TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}" >> .env
+          echo "TELEGRAM_URL=${{ secrets.TELEGRAM_URL }}" >> .env
+          echo "::set-output name=env-path::.env"
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: setup
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Copy .env file
+        run: cp ${{ needs.setup.outputs.env-path }} .env
 
       - name: Set up Python
         uses: actions/setup-python@v3
@@ -20,59 +55,47 @@ jobs:
           pip install poetry
           poetry install
 
-      - name: Set DJANGO_ENV for Testing
-        run: echo "DJANGO_ENV=development" >> $GITHUB_ENV
-
       - name: Set up PostgreSQL
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
           sudo service postgresql start
-          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'Meira4232953';"
-          sudo -u postgres psql -c "CREATE DATABASE Habit_Manager;"
-          sudo -u postgres psql -c "CREATE ROLE runner WITH LOGIN PASSWORD 'Meira4232953';"
-          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE Habit_Manager TO runner;"
+          sudo -u postgres psql -c "ALTER USER postgres PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
+          sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.POSTGRES_DB }};"
+          sudo -u postgres psql -c "CREATE ROLE runner WITH LOGIN PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
+          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ secrets.POSTGRES_DB }} TO runner;"
           sudo -u postgres psql -c "GRANT CREATE ON SCHEMA public TO runner;"
-          echo "DATABASE_URL=postgres://runner:Meira4232953@localhost/Habit_Manager" >> $GITHUB_ENV
+
+      - name: Run Tests
+        run: |
+          python manage.py test
 
   build-and-deploy:
+    name: Build and Deploy
     runs-on: ubuntu-latest
-    needs: test
+    needs: [setup, test]
 
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Copy .env file
+        run: cp ${{ needs.setup.outputs.env-path }} .env
 
       - name: Prune Docker cache
         run: |
           docker builder prune -af
           docker image prune -af
 
-      - name: Set DJANGO_ENV for Production
-        run: echo "DJANGO_ENV=production" >> $GITHUB_ENV
-
       - name: Log in to Docker Hub
-        shell: bash
         run: |
-          echo "### Logging into Docker Hub ###"
           echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login --username "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-          echo "### Logged into Docker Hub successfully ###"
 
       - name: Build Docker Image
-        run: |
-          echo "### Starting Docker Compose build ###"
-          docker compose build
-          echo "### Docker Compose build completed ###"
+        run: docker compose build
 
       - name: Push Docker Image
-        run: |
-          echo "### Starting Docker Compose push ###"
-          docker compose push
-          echo "### Docker Compose push completed ###"
+        run: docker compose push
 
       - name: Deploy to Render
-        run: |
-          echo "### Deploying to Render ###"
-          curl -X POST $RENDER_DEPLOY_HOOK
-          echo "### Deployment to Render triggered ###"
-        env:
+        run: curl -X POST $RENDER_DEPLOY_HOOK
