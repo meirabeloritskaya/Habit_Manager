@@ -1,0 +1,4 @@
+* text=auto
+*.bak text eol=lf
+*.dir text eol=lf
+*.log text eol=lf
