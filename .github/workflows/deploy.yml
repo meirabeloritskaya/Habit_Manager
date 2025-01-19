@@ -6,14 +6,12 @@ jobs:
   setup:
     name: Setup Environment
     runs-on: ubuntu-latest
-    outputs:
-      env-path: ${{ steps.set-env.outputs.env-path }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Generate .env file
-        id: set-env
         run: |
           echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
           echo "DJANGO_ENV=production" >> .env
@@ -31,7 +29,6 @@ jobs:
           echo "EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}" >> .env
           echo "TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}" >> .env
           echo "TELEGRAM_URL=${{ secrets.TELEGRAM_URL }}" >> .env
-          echo "::set-output name=env-path::.env"
 
   test:
     name: Run Tests
@@ -42,8 +39,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Copy .env file
-        run: cp ${{ needs.setup.outputs.env-path }} .env
+      - name: Generate .env file
+        run: |
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "DJANGO_ENV=production" >> .env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "POSTGRES_USER=postgres" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
+          echo "POSTGRES_HOST=db" >> .env
+          echo "DEBUG=False" >> .env
 
       - name: Set up Python
         uses: actions/setup-python@v3
@@ -67,8 +73,7 @@ jobs:
           sudo -u postgres psql -c "GRANT CREATE ON SCHEMA public TO runner;"
 
       - name: Run Tests
-        run: |
-          python manage.py test
+        run: python manage.py test
 
   build-and-deploy:
     name: Build and Deploy
@@ -79,8 +84,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Copy .env file
-        run: cp ${{ needs.setup.outputs.env-path }} .env
+      - name: Generate .env file
+        run: |
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "DJANGO_ENV=production" >> .env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "POSTGRES_USER=postgres" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
+          echo "POSTGRES_HOST=db" >> .env
+          echo "DEBUG=False" >> .env
 
       - name: Prune Docker cache
         run: |
@@ -98,4 +112,6 @@ jobs:
         run: docker compose push
 
       - name: Deploy to Render
-        run: curl -X POST $RENDER_DEPLOY_HOOK
+        run: |
+          echo "Deploying to Render"
+          curl -X POST $RENDER_DEPLOY_HOOK
