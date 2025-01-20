@@ -48,6 +48,24 @@ jobs:
           docker builder prune -af
           docker image prune -af
 
+      - name: Generate .env file
+        run: |
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "DJANGO_ENV=production" >> .env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
+          echo "POSTGRES_HOST=db" >> .env
+
+      - name: Verify .env file
+        run: |
+          echo "### Verifying .env file ###"
+          cat .env
+      - name: Move .env file to Docker context
+        run: mv .env /home/runner/work/Habit_Manager/Habit_Manager/.env
+
       - name: Set DJANGO_ENV for Production
         run: echo "DJANGO_ENV=production" >> $GITHUB_ENV
 
@@ -59,10 +77,10 @@ jobs:
           echo "### Logged into Docker Hub successfully ###"
 
       - name: Build Docker Image
-        run: docker compose build
+        run: docker compose --env-file /home/runner/work/Habit_Manager/Habit_Manager/.env build
 
       - name: Push Docker Image
-        run: docker compose push
+        run: docker compose --env-file /home/runner/work/Habit_Manager/Habit_Manager/.env push
 
 
       - name: Deploy to Render
