@@ -77,10 +77,10 @@ jobs:
           echo "### Logged into Docker Hub successfully ###"
 
       - name: Build Docker Image
-        run: docker compose --env-file .env build
+        run: docker compose --env-file /home/runner/work/Habit_Manager/Habit_Manager/.env build
 
       - name: Push Docker Image
-        run: docker compose --env-file .env push
+        run: docker compose --env-file /home/runner/work/Habit_Manager/Habit_Manager/.env push
 
 
       - name: Deploy to Render
