@@ -58,8 +58,6 @@ jobs:
         run: |
           echo "### Verifying .env file ###"
           cat .env
-      - name: Move .env file to Docker context
-        run: mv .env /home/runner/work/Habit_Manager/Habit_Manager/.env
 
       - name: Set DJANGO_ENV for Production
         run: echo "DJANGO_ENV=production" >> $GITHUB_ENV
