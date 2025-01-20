@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from habits.views import HabitViewSet, RewardViewSet, SendReminderView
+from . import views
 
 app_name = "habits"
 
@@ -10,6 +11,7 @@ router.register(r"habits", HabitViewSet, basename="habit")  # Для работ�
 router.register(r"rewards", RewardViewSet, basename="reward")  # Для работы с наградами
 
 urlpatterns = [
+    path("", views.home, name="home"),
     path("", include(router.urls)),  # Все маршруты для Habit и Reward через router
     path(
         "send_reminder/", SendReminderView.as_view(), name="send_reminder"

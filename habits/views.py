@@ -13,7 +13,7 @@ from users.serializers import (
 from habits.serializers import (
     RegisterSerializer,
 )  # Добавлен импорт сериализатора для регистрации
-
+from django.http import HttpResponse
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -136,3 +136,6 @@ class SendReminderView(APIView):
             return Response(
                 {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
             )
+
+def home(request):
+    return HttpResponse("Welcome to the Materials Application!")
