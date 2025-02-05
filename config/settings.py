@@ -16,7 +16,7 @@ STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 
 DEBUG =  False
 
-ALLOWED_HOSTS = ["https://habit-manager-dm69.onrender.com"]
+ALLOWED_HOSTS = ["*","https://habit-manager-dm69.onrender.com"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -195,5 +195,5 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 CSRF_TRUSTED_ORIGINS = ["https://habit-manager-dm69.onrender.com"]
