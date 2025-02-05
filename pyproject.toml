@@ -25,6 +25,7 @@ django-extensions = "^3.2.3"
 dj-database-url = "^2.3.0"
 redis = "^5.2.1"
 django = "^5.1.5"
+dj-config-url = "^0.1.1"
 
 
 
