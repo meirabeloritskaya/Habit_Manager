@@ -14,7 +14,7 @@ STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 
-DEBUG =  False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*","https://habit-manager-dm69.onrender.com"]
 
